@@ -37,109 +37,105 @@ public class JavaREPL {
 
     public static void main(String[] args) throws Exception
     {
-        exec(new InputStreamReader(System.in));
+        //exec(new InputStreamReader(System.in));
 
     }
 
-    public static void exec(Reader r) throws Exception
-    {
-        createTempDirectory();
-        BufferedReader bf = new BufferedReader(r);
-        NestedReader reader = new NestedReader(bf);
-        URL[] urls = new URL[] {new URL("file:/" + System.getProperty("user.dir") + "/temp")};
-        cloader = new URLClassLoader(urls);
-        while (true)
-        {
-            //System.out.print("> ");
-            String line = reader.getNestedString();
-            //System.out.print(line);
-            //System.out.println(line.length());
-           // System.out.println("xxxxxxxxxxxx");
-            if (line == null)
-            {
-               // System.out.println("hi");
-                break;
-            }
-            while (line.contains("//"))
-            {
-                int i = line.indexOf("//");
-                int j = i;
-                for (;i < line.length(); i++)
-                    if (line.charAt(i) == '\n')
-                        break;
-                String subline = line.substring(j, i);
-                line = line.replace(subline, "");
-            }
-            if (line.equals(""))
-                continue;
-            //System.out.print(line);
-            if ((int)line.charAt(0) == 10 || (int)line.charAt(0) == 13)
-            {
-                continue;
-            }
-            if (line.length() >= 6){
-            String subline = line.substring(0, 6);
-
-            if (subline.equals("print ")){
-
-                line = "System.out.println(" + line.substring(6, line.length() - 1) + ");";
-            }}
-
-            String code = null;
-            if (classNum == 0)
-            {
-                code = getCode(line, "interp_" + classNum, null, true);
-            }
-            else
-                code = getCode(line, "interp_" + classNum, "interp_" + (classNum - 1), true);
-            //System.out.println(code);
-            diagnostics = new DiagnosticCollector<JavaFileObject>();
-            if (isDeclaration(code))
-            {
-                compilerSetup(code, false);
-                Class<?> c = cloader.loadClass("interp_" + classNum);
-                classNum += 1;
-                continue;
-            }
-            else
-            {
-                if (classNum == 0)
-                {
-                    code = getCode(line, "interp_" + classNum, null, false);
+    public static void exec(StringReader r) throws IOException{
+        try {
+            createTempDirectory();
+            BufferedReader bf = new BufferedReader(r);
+            NestedReader reader = new NestedReader(bf);
+            URL[] urls = new URL[]{new URL("file:/" + System.getProperty("user.dir") + "/temp")};
+            cloader = new URLClassLoader(urls);
+            while (true) {
+                System.out.print("> ");
+                String line = reader.getNestedString();
+                // System.out.print(line + "xxx");
+                //System.out.println(line.length());
+                // System.out.println("xxxxxxxxxxxx");
+                if (line == null) {
+                    // System.out.println("hi");
+                    break;
                 }
-                else
-                    code = getCode(line, "interp_" + classNum, "interp_" + (classNum - 1), false);
-                //System.out.println(code);
-                if (diagnostics.getDiagnostics().size() != 0)
-                    diagnostics = new DiagnosticCollector<JavaFileObject>();
-                compilerSetup(code, false);
-                if (diagnostics.getDiagnostics().size() == 0)
-                {
-                    Class<?> c = cloader.loadClass("interp_" + classNum);
-                    Method m = c.getDeclaredMethod("exec", null);
-                    m.invoke(null, null);
-                    //exec(cloader, classNum, "exec");
-                    classNum += 1;
+                while (line.contains("//")) {
+                    int i = line.indexOf("//");
+                    int j = i;
+                    for (; i < line.length(); i++)
+                        if (line.charAt(i) == '\n')
+                            break;
+                    String subline = line.substring(j, i);
+                    line = line.replace(subline, "");
                 }
-                else {
-                    //System.out.println(diagnostics.getDiagnostics().toString());
-                    for (Diagnostic diagnostic : diagnostics.getDiagnostics())
-                    {
-                        System.err.print("line " + diagnostic.getLineNumber() + ": " + diagnostic.getMessage(null));
-                        System.err.println();
+                if (line.equals(""))
+                    continue;
+                //System.out.print(line);
+                if ((int) line.charAt(0) == 10 || (int) line.charAt(0) == 13) {
+                    continue;
+                }
+                if (line.length() >= 6) {
+                    String subline = line.substring(0, 6);
+
+                    if (subline.equals("print ")) {
+
+                        line = "System.out.println(" + line.substring(6, line.length() - 1) + ");";
                     }
                 }
-            }
 
+                String code = null;
+                if (classNum == 0) {
+                    code = getCode(line, "interp_" + classNum, null, true);
+                } else
+                    code = getCode(line, "interp_" + classNum, "interp_" + (classNum - 1), true);
+                //System.out.println(code);
+                diagnostics = new DiagnosticCollector<JavaFileObject>();
+                if (isDeclaration(code)) {
+                    compilerSetup(code, false);
+                    Class<?> c = cloader.loadClass("interp_" + classNum);
+                    classNum += 1;
+                    continue;
+                } else {
+                    if (classNum == 0) {
+                        code = getCode(line, "interp_" + classNum, null, false);
+                    } else
+                        code = getCode(line, "interp_" + classNum, "interp_" + (classNum - 1), false);
+                    //System.out.println(code);
+                    if (diagnostics.getDiagnostics().size() != 0)
+                        diagnostics = new DiagnosticCollector<JavaFileObject>();
+                    compilerSetup(code, false);
+                    if (diagnostics.getDiagnostics().size() == 0) {
+                        Class<?> c = cloader.loadClass("interp_" + classNum);
+                        Method m = c.getDeclaredMethod("exec", null);
+                        m.invoke(null, null);
+                        //exec(cloader, classNum, "exec");
+                        classNum += 1;
+                    } else {
+                        //System.out.println(diagnostics.getDiagnostics().toString());
+                        for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
+                            System.err.print("line " + diagnostic.getLineNumber() + ": " + diagnostic.getMessage(null));
+                            System.err.println();
+                        }
+                    }
+                }
+
+            }
+        }catch (Exception e)
+        {
+            e.printStackTrace();
         }
     }
 
-    public static void createTempDirectory() throws Exception
+    public static void createTempDirectory()
     {
-        File tempDir = new File("temp");
-        if (tempDir.exists())
-            tempDir.delete();
-        tempDir.mkdir();
+        try {
+            File tempDir = new File("temp");
+            if (tempDir.exists())
+                tempDir.delete();
+            tempDir.mkdir();
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         //System.out.println(tempDir.getAbsolutePath());
     }
 

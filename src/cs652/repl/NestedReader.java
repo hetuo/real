@@ -24,12 +24,45 @@ public class NestedReader {
 		    return '\n' + "";
 		//System.out.println(c + "xxxxxxxxxx");
         Stack<Character> s = new Stack<Character>();
-		
+		boolean comment = false;
 		while (c != -1)
 		{
-			//System.out.print((char)c + " ");
+			if (comment == true)
+            {
+                while(true)
+                {
+                    int c1 = input.read();
+                    //System.out.println((char)c1);
+                    if ((char)c1 == '\n'){
+                        c = c1;
+                        comment = false;
+                        break;
+                    }
+                }
+            }
+		    //System.out.print((char)c + " ");
 			switch(c)
 			{
+
+			    case '/':
+					if (comment == false)
+					{
+						int c1 = input.read();
+						//System.out.println("hetuo:" + (char)c1);
+						if ((char)c1 != '/')
+						{
+							buf.append('/');
+							c = c1;
+							//buf.append((char)c1);
+						}
+						else {
+						    //buf.append((char)c);
+                           // System.out.println("comment=true");
+						    c = c1;
+                            comment = true;
+                        }
+						break;
+					}
 			case '{':
 				s.push('}');
 				break;
@@ -64,7 +97,8 @@ public class NestedReader {
 	
 	public void consume() throws Exception
 	{
-		buf.append((char)c);
+		if ((char)c != '/')
+			buf.append((char)c);
 		//System.out.println("####" + buf.toString());
 		c = input.read();
 		//System.out.print((char)c + " ");

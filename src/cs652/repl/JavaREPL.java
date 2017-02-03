@@ -18,30 +18,13 @@ public class JavaREPL {
     public static URLClassLoader cloader;
     public static DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 
-	/*public static void main(String[] args) throws IOException {
-		exec(new InputStreamReader(System.in));
-	}
-
-	public static void exec(Reader r) throws IOException {
-		BufferedReader stdin = new BufferedReader(r);
-		NestedReader reader = new NestedReader(stdin);
-		int classNumber = 0;
-		while (true) {
-			System.out.print("> ");
-			String java = reader.getNestedString();
-			// TODO
-		}
-	}*/
-
-
-
     public static void main(String[] args) throws Exception
     {
-        //exec(new InputStreamReader(System.in));
+        exec(new InputStreamReader(System.in));
 
     }
 
-    public static void exec(StringReader r) throws IOException{
+    public static void exec(Reader r) throws IOException{
         try {
             createTempDirectory();
             BufferedReader bf = new BufferedReader(r);
@@ -51,11 +34,7 @@ public class JavaREPL {
             while (true) {
                 System.out.print("> ");
                 String line = reader.getNestedString();
-                // System.out.print(line + "xxx");
-                //System.out.println(line.length());
-                // System.out.println("xxxxxxxxxxxx");
                 if (line == null) {
-                    // System.out.println("hi");
                     break;
                 }
                 while (line.contains("//")) {
@@ -69,7 +48,6 @@ public class JavaREPL {
                 }
                 if (line.equals(""))
                     continue;
-                //System.out.print(line);
                 if ((int) line.charAt(0) == 10 || (int) line.charAt(0) == 13) {
                     continue;
                 }
@@ -81,13 +59,11 @@ public class JavaREPL {
                         line = "System.out.println(" + line.substring(6, line.length() - 1) + ");";
                     }
                 }
-
                 String code = null;
                 if (classNum == 0) {
                     code = getCode(line, "interp_" + classNum, null, true);
                 } else
                     code = getCode(line, "interp_" + classNum, "interp_" + (classNum - 1), true);
-                //System.out.println(code);
                 diagnostics = new DiagnosticCollector<JavaFileObject>();
                 if (isDeclaration(code)) {
                     compilerSetup(code, false);
@@ -99,7 +75,6 @@ public class JavaREPL {
                         code = getCode(line, "interp_" + classNum, null, false);
                     } else
                         code = getCode(line, "interp_" + classNum, "interp_" + (classNum - 1), false);
-                    //System.out.println(code);
                     if (diagnostics.getDiagnostics().size() != 0)
                         diagnostics = new DiagnosticCollector<JavaFileObject>();
                     compilerSetup(code, false);
@@ -107,10 +82,8 @@ public class JavaREPL {
                         Class<?> c = cloader.loadClass("interp_" + classNum);
                         Method m = c.getDeclaredMethod("exec", null);
                         m.invoke(null, null);
-                        //exec(cloader, classNum, "exec");
                         classNum += 1;
                     } else {
-                        //System.out.println(diagnostics.getDiagnostics().toString());
                         for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
                             System.err.print("line " + diagnostic.getLineNumber() + ": " + diagnostic.getMessage(null));
                             System.err.println();
@@ -136,7 +109,6 @@ public class JavaREPL {
         {
             e.printStackTrace();
         }
-        //System.out.println(tempDir.getAbsolutePath());
     }
 
     public static String getCode(String srcCode, String className, String extendSuper, boolean isDef)
@@ -161,16 +133,7 @@ public class JavaREPL {
     public static boolean isDeclaration(String line) throws Exception
     {
         compilerSetup(line, true);
-        //System.out.println("####" + diagnostics.getDiagnostics().toString());
-        //System.out.println(diagnostics.getDiagnostics().toString());
-
         return diagnostics.getDiagnostics().size() == 0;
-		/*Class<?> c = cloader.loadClass("interp_0");
-		cloader.close();
-		Method m = c.getDeclaredMethod("f", null);
-		m.invoke(null, null);
-		return false;*/
-
     }
 
     public static void compilerSetup(String line, boolean parse) throws Exception
@@ -192,21 +155,13 @@ public class JavaREPL {
             task.call();
         else
             task.parse();
-
         fileManager.close();
     }
 
     public static void exec(URLClassLoader loader, int classNum, String methodName) throws Exception
     {
-        //Class<?>[] cs = new Class<?>[classNum + 1];
-        //for (int i = 0; i <= classNum; i++)
-        //	cs[i] = loader.loadClass("interp_" + i);
         Class<?> c = loader.loadClass("interp_" + classNum);
-
-        //cloader.close();
-        //Method m = cs[classNum].getDeclaredMethod(methodName, null);
         Method m = c.getDeclaredMethod(methodName, null);
-       // System.out.println("execed");
         m.invoke(null, null);
     }
 }
